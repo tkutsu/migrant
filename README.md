@@ -45,10 +45,17 @@ pnpm build:data   # refreshes public/data/migration.json
 pnpm dev
 ```
 
-`public/data` is committed. GDELT throttles hard and its soft-ban outlasts any
-backoff worth sitting through, so a country it refuses keeps the coverage
-already in the repo instead of emptying its panel, and the sweep gives up after
-three consecutive refusals rather than spending hours being told to slow down.
+`public/data` is committed, and the sweep is built around GDELT refusing most
+of it. A country it will not serve keeps the coverage already in the repo
+rather than emptying its panel; a country whose committed coverage already
+reaches the last month is skipped, so the request budget goes on the gaps; and
+once GDELT is clearly refusing the sweep stops rather than spending an hour
+being told to slow down.
+
+Which countries get through is close to random, and different every run, so
+the deploy workflow commits the refreshed `public/data` back. Each run banks
+whatever it managed to fetch and the dataset converges instead of starting
+from the same holes every week.
 
 `pnpm build` runs the refresh and then exports to `out/`. A weekly GitHub
 Actions run does the same and publishes to Pages.

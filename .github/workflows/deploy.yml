@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -39,6 +39,20 @@ jobs:
       # country GDELT refuses keeps the coverage already in the repo rather
       # than emptying its panel.
       - run: pnpm build
+      # GDELT refuses a different scattering of countries every run, so a run
+      # that got three new ones has to keep them. Without this the runner's
+      # work is thrown away with the workspace and every week starts from the
+      # same gaps. A push made with GITHUB_TOKEN does not trigger workflows,
+      # so this cannot loop.
+      - name: Commit whatever the refresh managed to fetch
+        run: |
+          if [ -n "$(git status --porcelain public/data)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/data
+            git commit -m "Refresh the Eurostat and GDELT series"
+            git push
+          fi
       - uses: actions/configure-pages@v5
         with:
           enablement: true
