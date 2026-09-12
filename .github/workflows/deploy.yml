@@ -1,0 +1,57 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  # Weekly. Eurostat's monthly tables move once a month and GDELT moves daily,
+  # so weekly is the honest middle: often enough that the coverage row is
+  # current, rarely enough that the slow country-by-country GDELT sweep is not
+  # a standing cost.
+  #
+  # GitHub disables scheduled workflows after 60 days without repo activity;
+  # re-enable from the Actions tab if the numbers ever go stale.
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm typecheck
+      # Refreshes public/data over what is committed, then exports to out/. A
+      # country GDELT refuses keeps the coverage already in the repo rather
+      # than emptying its panel.
+      - run: pnpm build
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

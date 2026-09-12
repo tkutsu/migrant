@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-signal: var(--signal);
+}
+
+/* Categorical slots 1 and 2 of the validated palette. Both clear 3:1 on the
+   card surface in either mode, and the pair clears the CVD floor by a wide
+   margin - checked with the palette validator rather than by eye. */
+:root {
+  color-scheme: light;
+  --paper: #f4f3ee;
+  --ink: #14211f;
+  --surface: #ffffff;
+  --signal: #1c5cab;
+  --applications: #2a78d6;
+  --coverage: #d95926;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #101715;
+  --ink: #e5ebe8;
+  --surface: #182220;
+  --signal: #3987e5;
+  --applications: #3987e5;
+  --coverage: #d95926;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background-color: var(--paper);
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+button,
+select {
+  font-family: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:focus-visible,
+select:focus-visible,
+svg:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}

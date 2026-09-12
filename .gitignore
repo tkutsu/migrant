@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+tsconfig.tsbuildinfo
+.env*
+!.env.example
+
+# NOTE: public/data is deliberately NOT ignored here (the _swim approach).
+# The series are small, and a failed Eurostat/GDELT fetch should fall back to
+# the last good data rather than blanking the charts.
+
+# Planning notes, not part of the shipped app
+PLAN.md
