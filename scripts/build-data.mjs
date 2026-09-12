@@ -123,9 +123,11 @@ async function coverageFor(fips, start, end) {
     // A refusing GDELT sometimes accepts the connection and then says nothing,
     // which without this would hang the whole build on undici's five-minute
     // default rather than on the backoff below.
-    const body = await fetch(url, { signal: AbortSignal.timeout(REQUEST_MS) })
-      .then((response) => response.text())
-      .catch((error) => `fetch failed: ${error.message}`);
+    const { status, body } = await fetch(url, {
+      signal: AbortSignal.timeout(REQUEST_MS),
+    })
+      .then(async (response) => ({ status: response.status, body: await response.text() }))
+      .catch((error) => ({ status: 0, body: error.message }));
 
     if (body.trimStart().startsWith("{")) {
       const series = JSON.parse(body).timeline?.[0]?.data ?? [];
@@ -143,8 +145,16 @@ async function coverageFor(fips, start, end) {
       );
     }
 
+    // Only a 429 or a dropped connection is worth waiting out. Anything else is
+    // GDELT rejecting the query itself, which no amount of backoff will change,
+    // and reporting it as throttling would hide a bad country code.
+    if (status !== 429 && status !== 0) {
+      process.stdout.write(` HTTP ${status}: ${body.trim().slice(0, 80)}`);
+      return null;
+    }
     if (attempt >= BACKOFF_MS.length) return null;
-    process.stdout.write(` throttled, waiting ${BACKOFF_MS[attempt] / 1000}s…`);
+    const reason = status === 429 ? "throttled" : "no response";
+    process.stdout.write(` ${reason}, waiting ${BACKOFF_MS[attempt] / 1000}s…`);
     await sleep(BACKOFF_MS[attempt]);
   }
 }
